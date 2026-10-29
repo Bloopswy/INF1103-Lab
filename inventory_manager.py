@@ -1,5 +1,72 @@
 import json
 
+#Product class
+class Product:
+    def __init__(self, product_id, name, price, stock):
+        self.__product_id = product_id
+        self.__name = name
+        self.__price = float(price)
+        self.__stock = int(stock)
+
+    def get_id(self):
+        return self.__product_id
+
+    def get_name(self):
+        return self.__name
+
+    def get_stock(self):
+        return self.__stock
+
+    def update_stock(self, quantity):
+        if quantity < 0:
+            print("Stock cannot be negative.\n")
+        else:
+            self.__stock = quantity
+            print("\nStock updated successfully!\n")
+
+    def display_information(self):
+        print("ID:", self.__product_id,
+              "| Name:", self.__name,
+              "| Price: $", format(self.__price, ".2f"),
+              "| Stock:", self.__stock)
+
+    def to_dictionary(self):
+        return {
+            "id": self.__product_id,
+            "name": self.__name,
+            "price": self.__price,
+            "stock": self.__stock
+        }
+
+# Inventory class
+class Inventory:
+    def __init__(self):
+        self.__products = []
+
+    def add_product(self, product):
+        if self.search_product(product.get_id()) is not None:
+            print("Product ID already exists.\n")
+        else:
+            self.__products.append(product)
+            print("Product added successfully!\n")
+
+    def search_product(self, product_id):
+        for product in self.__products:
+            if product.get_id() == product_id:
+                return product
+        return None
+
+    def display_all(self):
+        print("Current Inventory\n",
+              "------------------------------------\n")
+        for product in self.__products:
+            product.display_information()
+        print("\n------------------------------------\n")
+
+    def get_products(self):
+        return self.__products
+
+
 def load_inventory():
     global inventory
     file = open("inventory.json", "r")
