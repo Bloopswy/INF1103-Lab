@@ -122,6 +122,27 @@ class DigitalProduct(Product):
         data["download_size"] = self.__download_size
         return data
 
+#ProductFactory class
+class ProductFactory:
+    @staticmethod
+    def create(product_type: str, product_id: str, name: str,
+               price: float, stock: int, supplier: Supplier,
+               extra: float) -> Product:
+
+        if product_type == "physical":
+            return PhysicalProduct(
+                product_id, name, price, stock, extra, supplier
+            )
+
+        elif product_type == "digital":
+            return DigitalProduct(
+                product_id, name, price, stock, extra, supplier
+            )
+
+        else:
+            raise ValueError(f"Unknown product type: {product_type}")
+
+
 class Inventory:
     def __init__(self):
         self.__products: list[Product] = []
@@ -307,27 +328,28 @@ def load_inventory(inventory):
 
 
         if product_type == "physical":
-            product = PhysicalProduct(
-                data["id"],
-                data["name"],
-                data["price"],
-                data["stock"],
-                data["weight"],
-                supplier
-            )
-            inventory.add_product(product)
+            extra = data["weight"]
+
         elif product_type == "digital":
-            product = DigitalProduct(
-                data["id"],
-                data["name"],
-                data["price"],
-                data["stock"],
-                data["download_size"],
-                supplier
-            )
-            inventory.add_product(product)
+            extra = data["download_size"]
+
         else:
             print("Unknown product type. Product skipped.\n")
+            continue
+
+        product = ProductFactory.create(
+            product_type,
+            data["id"],
+            data["name"],
+            data["price"],
+            data["stock"],
+            supplier,
+            extra)
+
+        inventory.add_product(product)
+
+    else:
+        print("Unknown product type. Product skipped.\n")
     print("Inventory loaded successfully.\n")
 
 
@@ -404,21 +426,41 @@ if __name__ == "__main__":
                     supplier_id, supplier_name, contact_email
                 )
 
-                if product_type == "1":
-                    weight = float(input("Weight (kg): "))
-                    if weight < 0:
-                        print("Weight cannot be negative.\n")
-                        continue
-                    new_product = PhysicalProduct(product_id, product_name, price, quantity, weight,supplier)
-                else:
-                    download_size = float(input("Download Size (MB): "))
-                    if download_size < 0:
-                        print("Download size cannot be negative.\n")
-                        continue
-                    new_product = DigitalProduct(product_id, product_name, price, quantity, download_size, supplier)               
-                inventory.add_product(new_product)
+                # Physical Product
+            if product_type == "1":
+                weight = float(input("Weight (kg): "))
 
-                print("Product added successfully!\n")
+                if weight < 0:
+                    print("Weight cannot be negative.\n")
+                    continue
+
+                extra = weight
+                product_type = "physical"
+
+            # Digital Product
+            else:
+                download_size = float(input("Download Size (MB): "))
+
+                if download_size < 0:
+                    print("Download size cannot be negative.\n")
+                    continue
+
+                extra = download_size
+                product_type = "digital"
+
+            # Create product using ProductFactory
+            new_product = ProductFactory.create(
+                product_type,
+                product_id,
+                product_name,
+                price,
+                quantity,
+                supplier,
+                extra
+            )
+
+            inventory.add_product(new_product)
+            print("Product added successfully!\n")
 
         # Menu option 3 - Update Stock
         elif input_option == "3":

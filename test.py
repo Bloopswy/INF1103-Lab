@@ -1,44 +1,47 @@
 
-from inventory_manager import Supplier, PhysicalProduct, Order
-from inventory_manager import NoDiscount, PercentageDiscount, BulkDiscount, StudentDiscount
+from inventory_manager import Supplier, ProductFactory
+from inventory_manager import PhysicalProduct, DigitalProduct
 
 
 # Create Supplier
 supplier = Supplier("S001", "Tech Supplies", "sales@tech.example")
 
-# Create Product
-product1 = PhysicalProduct("P001", "Keyboard", 125, 10, 0.7, supplier)
 
-# Create Order with BulkDiscount
-order1 = Order("O001", BulkDiscount(200, 20))
+# Test PhysicalProduct using Factory
+print("=== Physical Product ===")
 
-# Add two keyboards ($125 x 2 = $250)
-order1.add_order_line(product1, 2)
+product1 = ProductFactory.create(
+    "physical", "P001", "Laptop", 1200, 15, supplier, 1.28
+)
 
-# Test BulkDiscount
-print("Order with Bulk Discount:")
-order1.display_order()
-
-print()
-
-# Change to PercentageDiscount
-order1.set_discount(PercentageDiscount(10))
-
-print("Order with 10% Discount:")
-order1.display_order()
+product1.display_information()
+print(product1.get_fulfilment_info())
+print("Is PhysicalProduct?", isinstance(product1, PhysicalProduct))
 
 print()
 
-# Change to NoDiscount
-order1.set_discount(NoDiscount())
 
-print("Order with No Discount:")
-order1.display_order()
+# Test DigitalProduct using Factory
+print("=== Digital Product ===")
+
+product2 = ProductFactory.create(
+    "digital", "D001", "Software", 200, 5, supplier, 500
+)
+
+product2.display_information()
+print(product2.get_fulfilment_info())
+print("Is DigitalProduct?", isinstance(product2, DigitalProduct))
 
 print()
 
-# Change to StudentDiscount
-order1.set_discount(StudentDiscount())
 
-print("Order with Student Discount:")
-order1.display_order()
+# Test unknown product type
+print("=== Unknown Product Type ===")
+
+try:
+    product3 = ProductFactory.create(
+        "service", "S001", "Installation", 50, 10, supplier, 0
+    )
+
+except ValueError as error:
+    print("Error:", error)
