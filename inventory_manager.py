@@ -142,7 +142,7 @@ class ProductFactory:
         else:
             raise ValueError(f"Unknown product type: {product_type}")
 
-
+#Inventory class
 class Inventory:
     def __init__(self):
         self.__products: list[Product] = []
@@ -426,7 +426,6 @@ if __name__ == "__main__":
                     supplier_id, supplier_name, contact_email
                 )
 
-                # Physical Product
             if product_type == "1":
                 weight = float(input("Weight (kg): "))
 
@@ -437,10 +436,8 @@ if __name__ == "__main__":
                 extra = weight
                 product_type = "physical"
 
-            # Digital Product
             else:
                 download_size = float(input("Download Size (MB): "))
-
                 if download_size < 0:
                     print("Download size cannot be negative.\n")
                     continue
@@ -448,7 +445,6 @@ if __name__ == "__main__":
                 extra = download_size
                 product_type = "digital"
 
-            # Create product using ProductFactory
             new_product = ProductFactory.create(
                 product_type,
                 product_id,
