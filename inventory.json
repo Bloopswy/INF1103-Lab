@@ -1,0 +1,54 @@
+[
+    {
+        "id": "P001",
+        "name": "Laptop",
+        "price": 1200.0,
+        "stock": 15,
+        "supplier": {
+            "supplier_id": "S001",
+            "name": "ABC",
+            "contact_email": "ABC@abc.com"
+        },
+        "type": "physical",
+        "weight": 1.22
+    },
+    {
+        "id": "P002",
+        "name": "Mouse",
+        "price": 25.5,
+        "stock": 40,
+        "supplier": {
+            "supplier_id": "S002",
+            "name": "DEF",
+            "contact_email": "DEF@def.com"
+        },
+        "type": "physical",
+        "weight": 0.24
+    },
+    {
+        "id": "P003",
+        "name": "Keyboard",
+        "price": 45.0,
+        "stock": 25,
+        "supplier": {
+            "supplier_id": "S003",
+            "name": "GHI",
+            "contact_email": "GHI@ghi.com"
+        },
+        "type": "physical",
+        "weight": 0.68
+    },
+    {
+        "id": "D001",
+        "name": "Software",
+        "price": 198.99,
+        "stock": 51,
+        "supplier": {
+            "supplier_id": "S004",
+            "name": "microsoft",
+            "contact_email": "Microsoft@microsoft.com"
+        },
+        "type": "digital",
+        "download_size": 535.0
+    }
+]
