@@ -1,92 +1,132 @@
 
-from inventory_manager import Supplier, PhysicalProduct, DigitalProduct
-from inventory_manager import OrderLine, Order
+from inventory_manager import (
+    Supplier, PhysicalProduct, DigitalProduct,
+    ProductFactory, Inventory, Order, OrderLine,
+    NoDiscount, PercentageDiscount, BulkDiscount,
+    StudentDiscount, load_products, get_positive_float
+)
 
 
 # Create Supplier
 supplier = Supplier("S001", "Tech Supplies", "sales@tech.example")
 
 
-# Test 1: Invalid Product Price
-print("=== TEST 1: INVALID PRICE ===")
+# Part 2: Strategy Pattern
+print("=== PART 2: STRATEGY PATTERN ===")
 
-try:
-    product1 = PhysicalProduct(
-        "P001", "Laptop", -100, 10, 1.28, supplier
-    )
-except ValueError as error:
-    print("Error:", error)
+product1 = PhysicalProduct("P001", "Keyboard", 125, 10, 0.7, supplier)
 
+order1 = Order("O001", BulkDiscount(200, 20))
+order1.add_order_line(product1, 2)
 
-# Test 2: Zero Product Price
-print("\n=== TEST 2: ZERO PRICE ===")
+print("Bulk Discount:")
+order1.display_order()
 
-try:
-    product2 = DigitalProduct(
-        "D001", "Software", 0, 5, 500, supplier
-    )
-except ValueError as error:
-    print("Error:", error)
+order1.set_discount(PercentageDiscount(10))
+print("\n10% Discount:")
+order1.display_order()
 
+order1.set_discount(NoDiscount())
+print("\nNo Discount:")
+order1.display_order()
 
-# Test 3: Negative Stock
-print("\n=== TEST 3: NEGATIVE STOCK ===")
-
-try:
-    product3 = PhysicalProduct(
-        "P002", "Mouse", 25.50, -5, 0.28, supplier
-    )
-except ValueError as error:
-    print("Error:", error)
+order1.set_discount(StudentDiscount())
+print("\nStudent Discount:")
+order1.display_order()
 
 
-# Create Valid Product
-product4 = PhysicalProduct(
-    "P003", "Keyboard", 45, 20, 0.74, supplier
+# Part 3: Factory Pattern
+print("\n=== PART 3: FACTORY PATTERN ===")
+
+physical = ProductFactory.create(
+    "physical", "P002", "Mouse", 25.50, 40, supplier, 0.28
 )
 
-
-# Test 4: Invalid Stock Update
-print("\n=== TEST 4: INVALID STOCK UPDATE ===")
-
-try:
-    product4.update_stock(-10)
-except ValueError as error:
-    print("Error:", error)
-
-print("Current Stock:", product4.get_stock())
-
-
-# Test 5: Invalid OrderLine Quantity
-print("\n=== TEST 5: INVALID ORDERLINE QUANTITY ===")
-
-try:
-    order_line = OrderLine(product4, 0)
-except ValueError as error:
-    print("Error:", error)
-
-
-# Test 6: Invalid Order Quantity
-print("\n=== TEST 6: INVALID ORDER QUANTITY ===")
-
-order1 = Order("O001")
-
-try:
-    order1.add_order_line(product4, -3)
-except ValueError as error:
-    print("Error:", error)
-
-print("Order Total: $", format(order1.calculate_total(), ".2f"))
-
-
-# Test 7: Valid Product and Order
-print("\n=== TEST 7: VALID DATA ===")
-
-product5 = PhysicalProduct(
-    "P004", "Monitor", 200, 15, 3.5, supplier
+digital = ProductFactory.create(
+    "digital", "D001", "Software", 200, 5, supplier, 500
 )
 
+physical.display_information()
+digital.display_information()
+
+print("Is PhysicalProduct?", isinstance(physical, PhysicalProduct))
+print("Is DigitalProduct?", isinstance(digital, DigitalProduct))
+
+try:
+    ProductFactory.create(
+        "service", "S002", "Installation", 50, 10, supplier, 0
+    )
+
+except ValueError as error:
+    print("Error:", error)
+
+
+# Part 4: Validation
+print("\n=== PART 4: VALIDATION ===")
+
+# Invalid price
+try:
+    PhysicalProduct("P003", "Laptop", -100, 10, 1.28, supplier)
+except ValueError as error:
+    print("Invalid Price:", error)
+
+# Zero price
+try:
+    DigitalProduct("D002", "Editor", 0, 10, 500, supplier)
+except ValueError as error:
+    print("Zero Price:", error)
+
+# Negative stock
+try:
+    PhysicalProduct("P004", "Monitor", 200, -5, 3.5, supplier)
+except ValueError as error:
+    print("Negative Stock:", error)
+
+# Invalid stock update
+try:
+    physical.update_stock(-10)
+except ValueError as error:
+    print("Invalid Stock Update:", error)
+
+print("Current Stock:", physical.get_stock())
+
+# Invalid OrderLine quantity
+try:
+    OrderLine(physical, 0)
+except ValueError as error:
+    print("Invalid OrderLine:", error)
+
+# Invalid Order quantity
 order2 = Order("O002")
-order2.add_order_line(product5, 2)
 
-order2.display_order()
+try:
+    order2.add_order_line(physical, -3)
+except ValueError as error:
+    print("Invalid Order Quantity:", error)
+
+print("Order Total: $", format(order2.calculate_total(), ".2f"))
+
+
+# Part 5: Exception Handling
+print("\n=== PART 5: EXCEPTION HANDLING ===")
+
+# Test CSV loading
+print("\nTest 1: Load products.csv")
+
+inventory = Inventory()
+load_products("products.csv", inventory, supplier)
+
+print("\nProducts loaded:")
+inventory.display_all()
+
+# Test missing file
+print("\nTest 2: Missing CSV file")
+
+inventory2 = Inventory()
+load_products("missing_products.csv", inventory2, supplier)
+
+# Test user input
+print("\nTest 3: Invalid User Input")
+
+price = get_positive_float("Enter Price: ")
+print("Valid Price:", price)

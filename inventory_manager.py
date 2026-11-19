@@ -1,4 +1,5 @@
 import json
+import csv
 from abc import ABC, abstractmethod
 
 # Supplier class
@@ -30,7 +31,6 @@ class Product(ABC):
         self.__product_id: str = product_id
         self.__name:str = name
         self.__price:float =float(price)
-        self.__price:float = float(price)
         self.__stock:int = int(stock)
         self.__supplier:Supplier = supplier
 
@@ -59,15 +59,12 @@ class Product(ABC):
     def display_information(self):
         print(f"ID: {self.__product_id} | Name: {self.__name} | Price: ${format(self.__price, '.2f')} | Stock: {self.__stock}")
 
-
     def to_dictionary(self):
-        return {
-            "id": self.__product_id,
+        return { "id": self.__product_id,
             "name": self.__name,
             "price": self.__price,
             "stock": self.__stock,
-            "supplier": self.__supplier.to_dictionary()
-        }
+            "supplier": self.__supplier.to_dictionary()}
 
     @abstractmethod
     def get_fulfilment_info(self):
@@ -78,7 +75,6 @@ class CanBeShipped(ABC):
     @abstractmethod
     def calculate_shipping_cost(self):
         pass
-
 
 # Inheritance class for PhysicalProduct
 class PhysicalProduct(Product, CanBeShipped):
@@ -97,7 +93,6 @@ class PhysicalProduct(Product, CanBeShipped):
     def calculate_shipping_cost(self) -> float:
             return self.__weight * 5
 
-
     def to_dictionary(self):
         data = super().to_dictionary()
         data["type"] = "physical"
@@ -111,7 +106,6 @@ class DigitalProduct(Product):
                  stock: int, download_size: float, supplier: Supplier):
         super().__init__(product_id, name, price, stock, supplier)
         self.__download_size :float= float(download_size)
-
 
     def display_information(self):
         super().display_information()  # Call the parent class method to display common information
@@ -134,14 +128,10 @@ class ProductFactory:
                extra: float) -> Product:
 
         if product_type == "physical":
-            return PhysicalProduct(
-                product_id, name, price, stock, extra, supplier
-            )
+            return PhysicalProduct(product_id, name, price, stock, extra, supplier)
 
         elif product_type == "digital":
-            return DigitalProduct(
-                product_id, name, price, stock, extra, supplier
-            )
+            return DigitalProduct(product_id, name, price, stock, extra, supplier)
 
         else:
             raise ValueError(f"Unknown product type: {product_type}")
@@ -253,15 +243,12 @@ class Order:
 
     def calculate_total(self) -> float:
         total = 0
-
         for order_line in self.__order_lines:
             total = total + order_line.calculate_subtotal()
-
         return self.__discount.apply(total)
 
     def display_order(self):
         print("Order ID:", self.__order_id)
-
         for order_line in self.__order_lines:
             print("Subtotal: $",
                   format(order_line.calculate_subtotal(), ".2f"))
@@ -282,7 +269,7 @@ class Order:
 
 
 # Load inventory from JSON file
-def load_inventory(inventory):
+def load_inventory(inventory: Inventory):
     try:
         file = open("inventory.json", "r")
         saved_products = json.load(file)
@@ -290,6 +277,10 @@ def load_inventory(inventory):
 
     except FileNotFoundError:
         print("No existing inventory file found.\n")
+        return
+
+    except json.JSONDecodeError:
+        print("Invalid inventory JSON file.\n")
         return
 
     for data in saved_products:
@@ -303,10 +294,10 @@ def load_inventory(inventory):
 
             if choice == "1":
                 product_type = "physical"
-                data["weight"] = float(input("Weight (kg): "))
+                data["weight"] = get_nonnegative_float("Weight (kg): ")
             elif choice == "2":
                 product_type = "digital"
-                data["download_size"] = float(input("Download Size (MB): "))
+                data["download_size"] = get_nonnegative_float("Download Size (MB): ")
             else:
                 print("Invalid type. Product skipped.\n")
                 continue
@@ -320,18 +311,14 @@ def load_inventory(inventory):
             supplier_name = input("Supplier Name: ")
             contact_email = input("Contact Email: ")
 
-            supplier = Supplier(
-                supplier_id, supplier_name, contact_email
-            )
+            supplier = Supplier(supplier_id, supplier_name, contact_email)
 
         else:
             supplier = Supplier(
                 supplier_data["supplier_id"],
                 supplier_data["name"],
-                supplier_data["contact_email"]
-            )
-
-
+                supplier_data["contact_email"])
+            
         if product_type == "physical":
             extra = data["weight"]
 
@@ -341,17 +328,24 @@ def load_inventory(inventory):
         else:
             print("Unknown product type. Product skipped.\n")
             continue
+        try:
+            product = ProductFactory.create(
+                product_type,
+                data["id"],
+                data["name"],
+                data["price"],
+                data["stock"],
+                supplier,
+                extra)
 
-        product = ProductFactory.create(
-            product_type,
-            data["id"],
-            data["name"],
-            data["price"],
-            data["stock"],
-            supplier,
-            extra)
+            if inventory.search_product(product.get_id()) is not None:
+                print("Product ID already exists. Product skipped.\n")
+                continue
 
-        inventory.add_product(product)
+            inventory.add_product(product)
+        except ValueError as error:
+            print("Product skipped:", error)
+
     print("Inventory loaded successfully.\n")
 
 
@@ -362,11 +356,90 @@ def save_inventory(inventory):
     for product in inventory.get_products():
         saved_products.append(product.to_dictionary())
 
-    file = open("inventory.json", "w")
-    json.dump(saved_products, file, indent=4)
-    file.close()
+    with open("inventory.json", "w") as file:
+        json.dump(saved_products, file, indent=4)
 
     print("Inventory saved successfully to inventory.json.\n")
+
+def get_positive_float(prompt: str) -> float:
+    while True:
+        try:
+            value = float(input(prompt))
+            if value <= 0:
+                print("Please enter a number greater than zero.")
+                continue
+            return value
+        except ValueError:
+            print("Please enter a valid number.")
+
+def get_nonnegative_int(prompt: str) -> int:
+    while True:
+        try:
+            value = int(input(prompt))
+            if value < 0:
+                print("Stock cannot be negative.")
+                continue
+            return value
+        except ValueError:
+            print("Please enter a valid whole number.")
+
+
+# Helper function for Weight and Download Size
+def get_nonnegative_float(prompt: str) -> float:
+    while True:
+        try:
+            value = float(input(prompt))
+            if value < 0:
+                print("Value cannot be negative.")
+                continue
+            return value
+        except ValueError:
+            print("Please enter a valid number.")
+
+def load_products(path: str, inventory: Inventory, supplier: Supplier):
+    loaded = 0
+    try:
+        file = open(path, "r", newline="")
+    except FileNotFoundError:
+        print(f"Products file not found: {path}")
+    else:
+        with file:
+            reader = csv.reader(file)
+            next(reader, None)
+            for row in reader:
+                try:
+                    if len(row) != 5:
+                        raise ValueError("Invalid number of columns.")
+
+                    product_type = row[0]
+                    product_id = row[1]
+                    name = row[2]
+                    price = float(row[3])
+                    stock = int(row[4])
+                    extra = 0.0
+
+                    product = ProductFactory.create(
+                        product_type,
+                        product_id,
+                        name,
+                        price,
+                        stock,
+                        supplier,
+                        extra)
+
+                    if inventory.search_product(product.get_id()) is not None:
+                        raise ValueError("Product ID already exists.")
+                    inventory.add_product(product)
+                    loaded += 1
+
+                except ValueError as error:
+                    print(f"Skipped row {row}: {error}")
+
+        print(f"{loaded} products loaded.")
+
+    finally:
+        print("Load attempt finished.")
+
 
 
 # Main program
@@ -408,43 +481,27 @@ if __name__ == "__main__":
 
             product_id = input("Product ID: ")
             product_name = input("Product Name: ")
-            price = float(input("Price: "))
-            quantity = int(input("Quantity: "))
+            price = get_positive_float("Price: ")
+            quantity = get_nonnegative_int("Quantity: ")
 
-            if price < 0 or quantity < 0:
-                print("Price and stock cannot be negative.\n")
-
-            elif inventory.search_product(product_id) is not None:
+            if inventory.search_product(product_id) is not None:
                 print("Product ID already exists.\n")
+                continue
 
-            else:
+            print("\nSupplier Information")
 
-                print("\nSupplier Information")
-                supplier_id = input("Supplier ID: ")
-                supplier_name = input("Supplier Name: ")
-                contact_email = input("Contact Email: ")
-
-                supplier = Supplier(
-                    supplier_id, supplier_name, contact_email
-                )
+            supplier_id = input("Supplier ID: ")
+            supplier_name = input("Supplier Name: ")
+            contact_email = input("Contact Email: ")
+            supplier = Supplier(
+                supplier_id, supplier_name, contact_email)
 
             if product_type == "1":
-                weight = float(input("Weight (kg): "))
-
-                if weight < 0:
-                    print("Weight cannot be negative.\n")
-                    continue
-
-                extra = weight
+                extra = get_nonnegative_float("Weight (kg): ")
                 product_type = "physical"
 
             else:
-                download_size = float(input("Download Size (MB): "))
-                if download_size < 0:
-                    print("Download size cannot be negative.\n")
-                    continue
-
-                extra = download_size
+                extra = get_nonnegative_float("Download Size (MB): ")
                 product_type = "digital"
 
             new_product = ProductFactory.create(
@@ -471,7 +528,7 @@ if __name__ == "__main__":
                       "Name:", product.get_name(), "\n",
                       "Current Stock:", product.get_stock(), "\n")
 
-                new_stock = int(input("New Stock Quantity: "))
+                new_stock = get_nonnegative_int("New Stock Quantity: ")
                 product.update_stock(new_stock)
 
             else:
