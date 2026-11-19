@@ -22,6 +22,11 @@ class Supplier:
 class Product(ABC):
     def __init__(self, product_id: str, name: str, price: float,
                  stock: int, supplier: Supplier):
+        if price <= 0:
+            raise ValueError("Price must be greater than zero.")
+        if stock < 0:
+            raise ValueError("Stock cannot be negative.")
+        
         self.__product_id: str = product_id
         self.__name:str = name
         self.__price:float =float(price)
@@ -45,12 +50,11 @@ class Product(ABC):
     def get_price(self) -> float:
         return self.__price
 
-    def update_stock(self, quantity):
+    def update_stock(self, quantity:int):
         if quantity < 0:
-            print("Stock cannot be negative.\n")
-        else:
-            self.__stock = quantity
-            print("\nStock updated successfully!\n")
+            raise ValueError("Stock cannot be negative.")
+        self.__stock = quantity
+        print("\nStock updated successfully!\n")
 
     def display_information(self):
         print(f"ID: {self.__product_id} | Name: {self.__name} | Price: ${format(self.__price, '.2f')} | Stock: {self.__stock}")
@@ -216,6 +220,8 @@ class StudentDiscount(DiscountStrategy):
 #orderline class
 class OrderLine:
     def __init__(self, product: Product, quantity: int):
+        if quantity <= 0:
+            raise ValueError("Quantity must be greater than zero.")
         self.__product: Product = product
         self.__quantity:int = int(quantity)
 
@@ -236,12 +242,11 @@ class Order:
         else:
             self.__discount: DiscountStrategy = discount
 
+    
     def add_order_line(self, product: Product, quantity: int):
-        if quantity <= 0:
-            print("Quantity must be greater than zero.\n")
-        else:
-            order_line = OrderLine(product, quantity)
-            self.__order_lines.append(order_line)
+        order_line = OrderLine(product, quantity)
+        self.__order_lines.append(order_line)
+
 
     def set_discount(self, discount: DiscountStrategy):
         self.__discount = discount
@@ -347,9 +352,6 @@ def load_inventory(inventory):
             extra)
 
         inventory.add_product(product)
-
-    else:
-        print("Unknown product type. Product skipped.\n")
     print("Inventory loaded successfully.\n")
 
 
